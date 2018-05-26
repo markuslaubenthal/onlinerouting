@@ -12,6 +12,8 @@ class Node:
         self.r = None
         self.p = p
         self.xp = xp
+        self.x = x
+        self.y = y
 
 class Tree:
     def __init__(self):
@@ -23,6 +25,7 @@ class Tree:
             self._add(p, self.root)
 
     def _add(self, p, node):
+
 
 
 
