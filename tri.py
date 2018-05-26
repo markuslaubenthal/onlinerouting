@@ -7,17 +7,19 @@ import math
 
 
 class Node:
-    def __init__(self, p, xp):
+    def __init__(self, p, xp, x, y):
         self.l = None
         self.r = None
         self.p = p
         self.xp = xp
+        self.xpx = x
         self.x = x
         self.y = y
 
 class Tree:
-    def __init__(self):
+    def __init__(self, vD2):
         self.root = None
+        self.vD2 = vD2
     def add(self, p, x, y):
         if(self.root == None):
             self.root = Node(p, p, x, y)
@@ -25,10 +27,71 @@ class Tree:
             self._add(p, x, y, self.root)
 
     def _add(self, p, x, y, node):
+        if node.xpx > x:
+            node.xpx = x
+            node.xp = p
+        distD2_new = np.dot(np.array([x, y]), self.vD2) / np.dot(self.vD2, self.vD2)
+        distD2_node = np.dot(np.array([node.x, node.y]), self.vD2) / np.dot(self.vD2, self.vD2)
+        if distD2_new <= distD2_node:
+            if node.l == None:
+                node.l = Node(p, p, x, y)
+                node.p = p
+                node.x = x
+                node.y = y
+                return (-1, 0, 0)
+            else:
+                _p, _x, _y = self._add(p, x, y, node.l)
+                if _p != -1:
+                    node.p = p
+                    node.x = x
+                    node.y = y
+                    return (-1, 0, 0)
+        else:
+            if node.r == None:
+                node.r = Node(p, p, x, y)
+                return (p, x, y)
+            else:
+                return self._add(p, x, y, node.r)
 
+    def minAbove(self, p, x, y):
+        self.printTree()
+        if(self.root == None):
+            return 0
+        else:
+            M = self._minAbove(p, x, y, self.root)
+        _M = M[M[:,1].argsort()]
+        smallest = -2;
+        for m in _M:
+            if smallest == -2 and m[0] != p:
+                smallest = m[0]
+        return smallest
 
+    def _minAbove(self, p, x, y, node):
+        distD2_new = np.dot(np.array([x, y]), self.vD2) / np.dot(self.vD2, self.vD2)
+        distD2_node = np.dot(np.array([node.x, node.y]), self.vD2) / np.dot(self.vD2, self.vD2)
+        if distD2_new <= distD2_node:
+            if node.l:
+                # _i = np.array([[node.xp, node.xpx]])
+                # _j = np.array([self._minAbove(p, x, y, node.l)])
+                # print _i
+                # print _j
+                return np.append(np.array([[node.xp, node.xpx]]), self._minAbove(p, x, y, node.l), axis = 0)
+            else:
+                return np.array([[node.xp, node.xpx]])
+        else:
+            if node.r:
+                return self._minAbove(p, x, y, node.r)
+            else:
+                return np.array([[node.xp, node.xpx]])
+    def printTree(self):
+        if(self.root != None):
+            self._printTree(self.root)
 
-
+    def _printTree(self, node):
+        if(node != None):
+            self._printTree(node.l)
+            print str(node.p) + ' '
+            self._printTree(node.r)
 def createEdgesForCoan(P):
     #sorts the points in to a visiting order (order induced by D1)
     #visits each point p and adds it to the tree T
@@ -46,7 +109,14 @@ def createEdgesForCoan(P):
     a = np.array(unsortedList)
     viewingOrder = a[a[:,1].argsort()]
     viewingOrder = viewingOrder[:,0].astype(int)
+    print viewingOrder[::-1]
+    tree = Tree(vD2)
 
+    for p in viewingOrder:
+        tree.add(p, P[p][0], P[p][1])
+        minAbove = tree.minAbove(p, P[p][0], P[p][1])
+        print "---"
+        print(minAbove, p)
 
 
 
@@ -73,12 +143,14 @@ class examplePlot(object):
     def __init__(self):
         self._figure, self._axes, self._line = None, None, None
         self._dragging_point = None
-        self._points = np.random.rand(3,2) * 100
+        # self._points = np.random.rand(3,2) * 100
+        self._points = np.array([[10,30], [20,20], [40,30], [10,10], [30,20], [50,10]])
         self._trigangulation = None
 
         self._init_plot()
 
     def _init_plot(self):
+        halfThetaSix(self._points)
         self._figure = plt.figure("Example plot")
         axes = plt.subplot(1, 1, 1)
         axes.set_xlim(0, 100)
@@ -101,7 +173,6 @@ class examplePlot(object):
         self._update_plot()
 
     def _update_plot(self):
-        halfThetaSix(self._points)
         self._trigangulation = Delaunay(self._points)
         tri = self._trigangulation
         pltpoints = np.copy(self._points)
@@ -114,17 +185,3 @@ class examplePlot(object):
 
 if __name__ == "__main__":
     plot = examplePlot()
-
-
-
-
-
-
-
-
-
-
-
-
-
-    #
