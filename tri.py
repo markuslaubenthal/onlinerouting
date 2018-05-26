@@ -18,13 +18,13 @@ class Node:
 class Tree:
     def __init__(self):
         self.root = None
-    def add(self, p):
+    def add(self, p, x, y):
         if(self.root == None):
-            self.root = Node(p, p)
+            self.root = Node(p, p, x, y)
         else:
-            self._add(p, self.root)
+            self._add(p, x, y, self.root)
 
-    def _add(self, p, node):
+    def _add(self, p, x, y, node):
 
 
 
